@@ -28,6 +28,7 @@ public class GUI implements ActionListener {
     
     private String sequence = GenerateSequence();
     private int trysCount = 0;
+    private boolean chronoStarted = false;
     
     private final JFrame frame;
     
@@ -39,6 +40,7 @@ public class GUI implements ActionListener {
     
     private final JButton submit = new JButton();
     private final JTextField[] sequenceTF = new JTextField[4];
+    private final JTextField chronomiter = new JTextField();
     private final JTextField trys = new JTextField();
     private final JTextField input = new JTextField();
     private final JTextPane tips = new JTextPane();
@@ -46,7 +48,7 @@ public class GUI implements ActionListener {
     private final JLabel trysText = new JLabel();
     private final JLabel inputText = new JLabel();
     private final JLabel tipsText = new JLabel();
-    
+    private final JLabel chronomiterText = new JLabel();
     private final Font titleFont = new Font("Times New Roman", Font.ITALIC, 40);
     private final Font contentFont = new Font("Times New Roman", Font.PLAIN, 20);
     private final Font sFont = new Font("Times New Roman", Font.PLAIN, 11);
@@ -79,8 +81,7 @@ public class GUI implements ActionListener {
         sequencePanel.setBounds(44,120,300,50);
         
         trysPanel = new JPanel();
-        trysPanel.setPreferredSize(new Dimension(400, 150));
-        trysPanel.setBounds(80,185,200, 30);
+        trysPanel.setBounds(80,185,250, 30);
         
         inputPanel = new JPanel();
         inputPanel.setBounds(100, 210, 200,100);
@@ -115,7 +116,7 @@ public class GUI implements ActionListener {
             sequencePanel.add(sequenceTF[i]);
         }
         
-        trysPanel.setLayout(new GridLayout(1, 2, 0, 0));
+        trysPanel.setLayout(new GridLayout(1, 4, 10, 0));
         
         trysText.setText("Tries: ");
         trysText.setFont(contentFont);
@@ -123,7 +124,6 @@ public class GUI implements ActionListener {
         trysText.setHorizontalAlignment(JLabel.RIGHT);
         trysText.setPreferredSize(new Dimension(50, 50));
         
-        trys.setBounds(0, 0, 200, 50);
         trys.setEditable(false);
         trys.setFocusable(false);
         trys.setFont(sFont);
@@ -131,10 +131,23 @@ public class GUI implements ActionListener {
         trys.setForeground(cText);
         trys.setBorder(rounded);
         trys.setHorizontalAlignment(JTextField.CENTER);
+
+        chronomiterText.setText("Time:");
+        chronomiterText.setForeground(cText);
+        chronomiterText.setFont(contentFont);
+        chronomiterText.setBackground(cBackground);
+        
+        chronomiter.setFont(sFont);
+        chronomiter.setForeground(cText);
+        chronomiter.setBackground(cBackground);
+        chronomiter.setBorder(rounded);
+        chronomiter.setEditable(false);
+        chronomiter.setHorizontalAlignment(JButton.CENTER);
         
         trysPanel.add(trysText);
         trysPanel.add(trys);
-
+        trysPanel.add(chronomiterText);
+        trysPanel.add(chronomiter);
         inputPanel.setLayout(new GridLayout(2, 1, 0, 0));
 
         inputText.setText("Enter the sequence:");
@@ -197,6 +210,43 @@ public class GUI implements ActionListener {
         input.setBorder(rounded);
 
         if(e.getSource() == submit && !haveErrors()){
+            if(!chronoStarted){
+                chronoStarted = true;
+                new Thread(new Runnable() {
+                    public void run(){
+                        int seconds = 60;
+                        int minutes = 2;
+        
+                        while(sequence != input.getText()){
+                            
+                            seconds--;
+                            
+                            chronomiter.setText(minutes + "m " + seconds + "s");
+                            
+                            if(seconds == 0){
+                                seconds = 60;
+                                minutes--;
+                            }
+                            
+                            if(minutes == 0 && seconds == 0){
+                                chronomiter.setBackground(cError);
+                                break;
+                            }
+    
+                            if(guessed()){
+                                chronomiter.setBackground(cGuess);
+                                tips.setText("Congratulations! You discovered the sequence!\nRestart the program if you'd like to play again!");
+                                break;
+                            }
+                            
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {}
+                        }
+                    }
+                }).start();
+            }
+
             trysCount++;
             tips.setText("");
             sequenceComp();
@@ -232,6 +282,16 @@ public class GUI implements ActionListener {
         return false;
     }
 
+    //Finds out if the sequence is guessed
+    private boolean guessed(){
+
+        for(int i = 0; i < 4; i++){
+            if(sequenceTF[i].getText().isBlank())
+                return false;
+        }
+        return true;
+    }
+
     //Compare the user sequence and the generated one
     private void sequenceComp(){
 
@@ -245,7 +305,6 @@ public class GUI implements ActionListener {
         }
         //Control step by step on input sequence
         for(int i = 0; i < 4; i++){
-
             //Comparison on the generated sequence
             for(int j = 0; j < 4; j++){
                 if(input.getText().charAt(i) == sequence.charAt(j) && i == j){
