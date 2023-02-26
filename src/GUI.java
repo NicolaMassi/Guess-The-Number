@@ -223,15 +223,19 @@ public class GUI implements ActionListener {
                             
                             chronomiter.setText(minutes + "m " + seconds + "s");
                             
+                            if(minutes == 0 && seconds == 0){
+                                input.setEditable(false);
+                                input.setBackground(cBackground);
+                                submit.setEnabled(false);
+                                tips.setText("You failed! Time is up!\nTo play again restart the program!");
+                                break;
+                            }
+                            
                             if(seconds == 0){
                                 seconds = 60;
                                 minutes--;
                             }
                             
-                            if(minutes == 0 && seconds == 0){
-                                chronomiter.setBackground(cError);
-                                break;
-                            }
     
                             if(guessed()){
                                 chronomiter.setBackground(cGuess);
